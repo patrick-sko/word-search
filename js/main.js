@@ -2,6 +2,12 @@
 const canvas = document.getElementById('wordSearchCanvas');
 const context = canvas.getContext('2d');
 
+/** @const {!Array<number>} */
+const LETTER_FREQUENCY = [
+  8.498,  9.989,  12.191, 16.445, 27.607, 29.835, 31.85,   37.944, 45.49,
+  45.643, 46.935, 50.96,  53.365, 60.114, 67.621, 69.550,  69.645, 77.232,
+  83.559, 92.915, 95.673, 96.651, 99.211, 99.361, 101.355, 101.432
+];
 
 function redraw() {
   let height = canvas.getBoundingClientRect().height;
@@ -10,51 +16,81 @@ function redraw() {
   // console.log('Height is: ' + height + ' Width is: ' + width);
 }
 
+/** @record */
+class GameBoard {
+  constructor() {
+    /** @type {number} */
+    this.startPointX;
+    /** @type {number} */
+    this.startPointY;
+    /** @type {number} */
+    this.gameHeight;
+    /** @type {number} */
+    this.gameWidth;
+    /** @type {number} */
+    this.dimensionsOfSquare;
+    /** @type {!Array<!Array<!Square>>} */
+    this.board;
+  }
+}
+
+/** @record */
+class Square {
+  constructor() {
+    /** @type {number} */
+    this.xCoord;
+    /** @type {number} */
+    this.yCoord;
+    /** @type {string} */
+    this.character;
+  }
+}
+
+
 /**
  * Returns a word seach game board that is created based of the dimensions
  * of the allocated screen space with each letter being allocated it's
  * own square within the board.
  * @param {number} canvasHeight
  * @param {number} canvasWidth
- * @returns {Object}
+ * @returns {!GameBoard}
  */
 function createGameBoard(canvasHeight, canvasWidth) {
-  let gameBoard =
-      {startPointX: 0, startPointY: 0, gameHeight: 10, gameWidth: 10, board: []}
+  let /** @type {!GameBoard} */ gameBoard = {
+    startPointX: 0,
+    startPointY: 0,
+    gameHeight: 10,
+    gameWidth: 10,
+    dimensionsOfSquare: 0,
+    board: []
+  }
 
   let heightScaler = canvasHeight / gameBoard.gameHeight;
   let widthScaler = canvasWidth / gameBoard.gameWidth;
 
-  if (widthScaler > heightScaler) {
-    widthScaler = heightScaler;
-  } else {
-    heightScaler = widthScaler;
-  }
+  gameBoard.dimensionsOfSquare =
+      widthScaler > heightScaler ? heightScaler : widthScaler
 
-  let middlePoint = canvasWidth / 2 - (widthScaler * gameBoard.gameWidth / 2);
+  let middlePoint = canvasWidth / 2 -
+      (gameBoard.dimensionsOfSquare * gameBoard.gameWidth / 2);
+
   gameBoard.startPointX = middlePoint;
 
-  currX = gameBoard.startPointX;
-  currY = gameBoard.startPointY;
+  let currX = gameBoard.startPointX;
+  let currY = gameBoard.startPointY;
 
   for (let i = 0; i < gameBoard.gameHeight; ++i) {
     let rowOfSquares = [];
     for (let j = 0; j < gameBoard.gameWidth; ++j) {
-      let square = {
-        xCoord: currX,
-        yCoord: currY,
-        width: widthScaler,
-        height: heightScaler,
-        character: '-'
-      };
+      let square = {xCoord: currX, yCoord: currY, character: '-'};
 
       rowOfSquares.push(square);
 
-      currX += widthScaler;
+      currX += gameBoard.dimensionsOfSquare;
     }
     gameBoard.board.push(rowOfSquares);
     currX = gameBoard.startPointX;
-    currY += heightScaler;
+    currY += gameBoard.dimensionsOfSquare;
   }
 
   return gameBoard;
@@ -63,17 +99,14 @@ function createGameBoard(canvasHeight, canvasWidth) {
 /**
  * Converts ranNumber from a float to a character in the
  * english alphabet based on what interval it is within the charFrequency.
- * @param {array} charFrequency an array of floats where element at index i
- *    less element index i - 1 is the frequency that the i'th letter occurs in
- *    the english language
  * @param {number} ranNumber a random float between 0-101.432
- * @return {String}
+ * @return {string}
  */
-function getCharater(charFrequency, ranNumber) {
+function getCharater(ranNumber) {
   let index = 0;
 
   for (let i = 0; i < 26; ++i) {
-    if (ranNumber < charFrequency[i]) {
+    if (ranNumber < LETTER_FREQUENCY[i]) {
       index = i;
       break;
     }
@@ -85,43 +118,37 @@ function getCharater(charFrequency, ranNumber) {
 /**
  * Based on a weighted random distribution, it populates the wordSearchBoard
  * with random letters.
- * @param {object} wordSearchBoard
+ * @param {!GameBoard}
+ *     wordSearchBoard
  */
 function randomizeCharacters(wordSearchBoard) {
-  /** @const {number} */
-  const frequency = [
-    8.498,  9.989,  12.191, 16.445, 27.607, 29.835, 31.85,   37.944, 45.49,
-    45.643, 46.935, 50.96,  53.365, 60.114, 67.621, 69.550,  69.645, 77.232,
-    83.559, 92.915, 95.673, 96.651, 99.211, 99.361, 101.355, 101.432
-  ];
-
-  for (let i = 0; i < wordSearchBoard.gameHeight; ++i) {
-    for (let j = 0; j < wordSearchBoard.gameWidth; ++j) {
+  for (const row of wordSearchBoard.board) {
+    for (const square of row) {
       let randomNum = Math.random() * 101.432;
-      wordSearchBoard.board[i][j].character = getCharater(frequency, randomNum);
+      square.character = getCharater(randomNum);
     }
   }
 }
 
 /**
  * Draws the game board onto the screen with the canvas api.
- * @param {object} wordSearchBoard
+ * @param {!GameBoard} wordSearchBoard
  */
 function drawGameBoard(wordSearchBoard) {
   context.textAlign = 'center'
   context.font = '30px Arial';
-  for (let i = 0; i < wordSearchBoard.gameHeight; ++i) {
-    for (let j = 0; j < wordSearchBoard.gameWidth; ++j) {
-      const square = wordSearchBoard.board[i][j];
-
+  for (const row of wordSearchBoard.board) {
+    for (const /** @const {!Square} */ square of row) {
       context.fillStyle = 'white';
       context.fillRect(
-          square.xCoord, square.yCoord, square.width, square.height);
+          square.xCoord, square.yCoord, wordSearchBoard.dimensionsOfSquare,
+          wordSearchBoard.dimensionsOfSquare);
 
       context.fillStyle = 'black';
       context.fillText(
-          square.character, square.xCoord + square.width / 2,
-          square.yCoord + square.height / 2 + 10);
+          square.character,
+          square.xCoord + wordSearchBoard.dimensionsOfSquare / 2,
+          square.yCoord + wordSearchBoard.dimensionsOfSquare / 2 + 10);
     }
   }
 }
@@ -133,7 +160,7 @@ function main() {
   let height = canvas.getBoundingClientRect().height;
   let width = canvas.getBoundingClientRect().width;
 
-  wordSearchBoard = createGameBoard(height, width);
+  let /** !GameBoard */ wordSearchBoard = createGameBoard(height, width);
   randomizeCharacters(wordSearchBoard);
 
   console.log(wordSearchBoard);
