@@ -123,7 +123,7 @@ function getCharater(ranNumber) {
  */
 function randomizeCharacters(wordSearchBoard) {
   for (const row of wordSearchBoard.board) {
-    for (const square of row) {
+    for (const /** @const {!Square} */ square of row) {
       let randomNum = Math.random() * 101.432;
       square.character = getCharater(randomNum);
     }
@@ -160,7 +160,8 @@ function main() {
   let height = canvas.getBoundingClientRect().height;
   let width = canvas.getBoundingClientRect().width;
 
-  let /** !GameBoard */ wordSearchBoard = createGameBoard(height, width);
+  let /** @type {!GameBoard} */ wordSearchBoard =
+      createGameBoard(height, width);
   randomizeCharacters(wordSearchBoard);
 
   console.log(wordSearchBoard);
