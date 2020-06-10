@@ -6,16 +6,15 @@ const view = goog.require('wordsearch.view');
 
 
 class Controller {
-  /*
-  /* @param {!model.GameBoard} */
-  constructor() {
-    /* @const {!model.GameBoard} */
-    //  this.wordSearchBoard = wordSearchBoard;
+  /** @param {!model.GameBoard} */
+  constructor(wordSearchBoard) {
+    /** @const {!model.GameBoard} */
+    this.wordSearchBoard = wordSearchBoard;
   }
 
   onMouseDown() {
-    var x = window.event.clientX;  // Get the horizontal coordinate
-    var y = window.event.clientY;  // Get the vertical coordinate
+    var x = window.event.clientX;
+    var y = window.event.clientY;
 
     if (this.wordSearchBoard.isOnBoard(x, y)) {
       this.drawLineFlag = true;
@@ -94,7 +93,8 @@ class Controller {
 function main() {
   // window.addEventListener('resize', redraw);
 
-
+  const wordSearchBoard =
+      model.createGameBoard(view.getViewHeight(), view.getViewWidth());
 
   model.randomizeCharacters(wordSearchBoard);
 
@@ -113,8 +113,8 @@ function main() {
   initView.init();
 }
 
-const wordSearchBoard =
-    model.createGameBoard(view.getViewHeight(), view.getViewWidth());
+// const wordSearchBoard =
+//  model.createGameBoard(view.getViewHeight(), view.getViewWidth());
 
 
 
