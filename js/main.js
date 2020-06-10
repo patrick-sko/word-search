@@ -102,7 +102,7 @@ function main() {
 
   console.log(wordSearchBoard.isOnBoard(500, 400));
 
-  const controller = new Controller();
+  const controller = new Controller(wordSearchBoard);
 
   const initView = new view.View(wordSearchBoard);
 
