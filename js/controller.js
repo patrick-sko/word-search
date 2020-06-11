@@ -36,7 +36,8 @@ class Controller {
           square.yCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2;
 
       this.myView.drawSearchLine(
-          this.startX, this.startY, this.startX, this.startY);
+          new model.Point(this.startX, this.startY),
+          new model.Point(this.startX, this.startY));
 
       console.log('Hit!');
     } else {
@@ -65,7 +66,9 @@ class Controller {
 
       this.drawLineFlag = false;
 
-      this.myView.drawSearchLine(this.startX, this.startY, endX, endY);
+      this.myView.drawSearchLine(
+          new model.Point(this.startX, this.startY),
+          new model.Point(endX, endY));
 
       console.log(
           'Distance from start to end is: ',
@@ -82,7 +85,8 @@ class Controller {
     const y = window.event.clientY;
 
     if (this.drawLineFlag) {
-      this.myView.drawSearchLine(this.startX, this.startY, x, y);
+      this.myView.drawSearchLine(
+          new model.Point(this.startX, this.startY), new model.Point(x, y));
     }
   }
 }

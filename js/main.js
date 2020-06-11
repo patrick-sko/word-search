@@ -5,7 +5,6 @@ const view = goog.require('wordsearch.view');
 const controller = goog.require('wordsearch.controller');
 
 
-
 function main() {
   controller.playGame();
 }

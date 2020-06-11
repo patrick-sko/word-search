@@ -54,24 +54,25 @@ class View {
   /**
    * Draws a line to indicate the current selection within the game board
    * between the two points
-   * @param {number} startX
-   * @param {number} startY
-   * @param {number} endX
-   * @param {number} endY
+   * @param {!model.Point} startPoint
+   * @param {!model.Point} tempEndPoint
    */
-  drawSearchLine(startX, startY, endX, endY) {
-    const angleRadians = Math.atan2(endY - startY, endX - startX);
+  drawSearchLine(startPoint, tempEndPoint) {
+    const angleRadians = Math.atan2(
+        tempEndPoint.y - startPoint.y, tempEndPoint.x - startPoint.x);
 
-    const dist =
-        Math.sqrt(Math.pow(startX - endX, 2) + Math.pow(startY - endY, 2))
+    const dist = Math.sqrt(
+        Math.pow(startPoint.x - tempEndPoint.x, 2) +
+        Math.pow(startPoint.y - tempEndPoint.y, 2))
 
-    endX = startX + dist;
-    endY = startY;
-
+    // We re-adjust the endPoint so that both points lie on a horizantol line.
+    // This makes the math of determining the midpoint easier, and allows us to
+    // rotate the rectangle with respect to the real endpoint.
+    const endPoint = new model.Point(startPoint.x + dist, startPoint.y);
 
     const radiusOfLine = 15;
 
-    const midPoint = startX + ((endX - startX) / 2);
+    const midPoint = startPoint.x + ((endPoint.x - startPoint.x) / 2);
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -82,33 +83,33 @@ class View {
     // context.globalAlpha = .5;
 
     context.lineWidth = 5.0;
-    context.translate(startX, startY);
+    context.translate(startPoint.x, startPoint.y);
     context.rotate(angleRadians);
-    context.translate(-startX, -startY);
+    context.translate(-startPoint.x, -startPoint.y);
 
 
     context.beginPath();
-    context.moveTo(midPoint, startY - radiusOfLine);
+    context.moveTo(midPoint, startPoint.y - radiusOfLine);
 
 
     context.arcTo(
-        endX + radiusOfLine, endY - radiusOfLine, endX + radiusOfLine, endY,
-        radiusOfLine);
+        endPoint.x + radiusOfLine, endPoint.y - radiusOfLine,
+        endPoint.x + radiusOfLine, endPoint.y, radiusOfLine);
 
     context.arcTo(
-        endX + radiusOfLine, endY + radiusOfLine, midPoint,
-        startY + radiusOfLine, radiusOfLine);
+        endPoint.x + radiusOfLine, endPoint.y + radiusOfLine, midPoint,
+        startPoint.y + radiusOfLine, radiusOfLine);
 
     context.arcTo(
-        startX - radiusOfLine, startY + radiusOfLine, startX - radiusOfLine,
-        startY, radiusOfLine);
+        startPoint.x - radiusOfLine, startPoint.y + radiusOfLine,
+        startPoint.x - radiusOfLine, startPoint.y, radiusOfLine);
 
     context.arcTo(
-        startX - radiusOfLine, startY - radiusOfLine, midPoint,
-        startY - radiusOfLine, radiusOfLine);
+        startPoint.x - radiusOfLine, startPoint.y - radiusOfLine, midPoint,
+        startPoint.y - radiusOfLine, radiusOfLine);
 
     // Used to complete the rounded edge rectangle
-    context.lineTo(midPoint, startY - radiusOfLine);
+    context.lineTo(midPoint, startPoint.y - radiusOfLine);
 
     context.stroke();
     context.restore();
