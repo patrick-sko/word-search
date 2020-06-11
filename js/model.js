@@ -11,106 +11,155 @@ const LETTER_FREQUENCY = [
 const WORDS = ['patrick'];
 
 class Point {
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
   constructor(x, y) {
+    /** @const {number} */
     this.x = x;
+    /** @const {number} */
     this.y = y;
+  }
+
+  /**
+   * Returns the difference between two points
+   * @param {!Point} pointB
+   * @returns {!Point}
+   */
+  subtract(pointB) {
+    return new Point(this.x - pointB.x, this.y - pointB.y);
+  }
+
+  /**
+   * Returns the dot product of two points
+   * @param {!Point} pointB
+   * @returns {number}
+   */
+  dot(pointB) {
+    return this.x * pointB.x + this.y + pointB.y;
+  }
+
+  /**
+   * Returns the euclidean distance between two points
+   * @param {!Point} PointB
+   * @returns {number}
+   */
+  distance(PointB) {
+    return Math.sqrt(
+        Math.pow(this.x - PointB.x, 2) + Math.pow(this.y - PointB.y, 2))
   }
 }
 
-function subtract(a, b) {
-  return new Point(a.x - b.x, a.y - b.y);
-}
-
-function dot(a, b) {
-  return a.x * b.x + a.y + b.y;
-}
-
-function distance(PointA, PointB) {
-  return Math.sqrt(
-      Math.pow(PointA.x - PointB.x, 2) + Math.pow(PointA.y - PointB.y, 2))
-}
-
+/**
+ * Gets the project of targetPoint on the line specified between startPoint and
+ * endPoint
+ * @param {!Point} startPoint
+ * @param {!Point} endPoint
+ * @param {!Point} targetPoint
+ * @returns {!Point}
+ */
 function getNearestPointOnLine(startPoint, endPoint, targetPoint) {
-  let P0 = new Point(startPoint.x, startPoint.y);
-  let P1 = new Point(endPoint.x, endPoint.y);
-  let M = new Point(targetPoint.x, targetPoint.y);
+  let v = endPoint.subtract(startPoint);
 
-  let v = subtract(P1, P0);
+  let u = targetPoint.subtract(startPoint);
 
-  let u = subtract(M, P0);
-
-  let s = dot(u, v) / dot(v, v);
+  let s = u.dot(v) / v.dot(v);
 
   if (s < 0) {
-    return P0;
+    return startPoint;
   } else if (s > 1) {
-    return P1;
+    return endPoint;
   } else {
-    let I = P0;
+    let I = startPoint;
     let w = new Point(s * v.x, s * v.y);
-    P0 = new Point(I.x + w.x, I.y + w.y);
-    return P0;
+    const result = new Point(I.x + w.x, I.y + w.y);
+    return result;
   }
 }
 
 class GameBoard {
-  constructor(a, b, c, d, e, f) {
+  /**
+   * @param {number} startPointX
+   * @param {number} startPointY
+   * @param {number} gameHeight
+   * @param {number} gameWidth
+   * @param {number} dimensionsOfSquare
+   * @param {!Array<!Array<!Square>>} board
+   */
+  constructor(
+      startPointX, startPointY, gameHeight, gameWidth, dimensionsOfSquare,
+      board) {
     /** @type {number} */
-    this.startPointX = a;
+    this.startPointX = startPointX;
     /** @type {number} */
-    this.startPointY = b;
+    this.startPointY = startPointY;
     /** @type {number} */
-    this.gameHeight = c;
+    this.gameHeight = gameHeight;
     /** @type {number} */
-    this.gameWidth = d;
+    this.gameWidth = gameWidth;
     /** @type {number} */
-    this.dimensionsOfSquare = e;
+    this.dimensionsOfSquare = dimensionsOfSquare;
     /** @type {!Array<!Array<!Square>>} */
-    this.board = f;
+    this.board = board;
   }
 
-  findSquare(x, y) {
+  /**
+   * Returns the square that contains the coords x, y
+   * @param {!Point} point
+   * @returns {?Square}
+   */
+  findSquare(point) {
     for (const row of this.board) {
       for (const square of row) {
-        let widthOfSquare = square.xCoord + this.dimensionsOfSquare;
-        let heightOfSquare = square.yCoord + this.dimensionsOfSquare;
-        if (x < widthOfSquare && y < heightOfSquare && x > square.xCoord &&
-            y > square.yCoord) {
+        const widthOfSquare = square.xCoord + this.dimensionsOfSquare;
+        const heightOfSquare = square.yCoord + this.dimensionsOfSquare;
+        if (point.x <= widthOfSquare && point.y <= heightOfSquare &&
+            point.x > square.xCoord && point.y > square.yCoord) {
           return square;
         }
       }
     }
-    return null;  // Maybe change to throw error
+    return null;  // TODO - Handle case where the mouse is off the screen
   }
 
-  isOnBoard(x, y) {
+
+  /**
+   * Determines if the coords x, y lie within the game board
+   * @param {!Point} point
+   * @returns {boolean}
+   */
+  isOnBoard(point) {
     const widthOfBoard =
         this.startPointX + this.gameWidth * this.dimensionsOfSquare;
     const heightOfBoard =
         this.startPointY + this.gameHeight * this.dimensionsOfSquare;
 
-    if (x < widthOfBoard && y < heightOfBoard && x > this.startPointX &&
-        y > this.startPointY) {
+    if (point.x < widthOfBoard && point.y < heightOfBoard &&
+        point.x > this.startPointX && point.y > this.startPointY) {
       return true;
     } else {
       return false;
     }
   }
 
-  getSquaresFromLine(startX, startY, endX, endY) {
-    let result = [];
-
-
-    const startPoint = new Point(startX, startY);
-    const endPoint = new Point(endX, endY);
+  /**
+   * Gets all the squares that lie within a distance of 2 pixels from the line
+   * created by the parameters to the center of each square
+   * @param {!Point} startPoint
+   * @param {!Point} endPoint
+   * @returns {!Array<!Square>}
+   */
+  getSquaresFromLine(startPoint, endPoint) {
+    const result = [];
 
     for (const row of this.board) {
       for (const square of row) {
-        let temp = new Point(
+        let center = new Point(
             square.xCoord + this.dimensionsOfSquare / 2,
             square.yCoord + this.dimensionsOfSquare / 2);
-        const closest = getNearestPointOnLine(startPoint, endPoint, temp);
-        if (distance(temp, closest) < 2) {
+        const closest = getNearestPointOnLine(startPoint, endPoint, center);
+        if (center.distance(closest) < 2) {
           result.push(square);
         }
       }
@@ -176,6 +225,8 @@ function createGameBoard(canvasHeight, canvasWidth) {
     currY += gameBoard.dimensionsOfSquare;
   }
 
+  populateWithRandomChars(gameBoard);
+
   return gameBoard;
 }
 
@@ -185,7 +236,7 @@ function createGameBoard(canvasHeight, canvasWidth) {
  * @param {number} ranNumber a random float between 0-101.432
  * @return {string}
  */
-function getCharater(ranNumber) {
+function getRandomizedCharater(ranNumber) {
   let index = 0;
 
   for (let i = 0; i < 26; ++i) {
@@ -204,11 +255,11 @@ function getCharater(ranNumber) {
  * @param {!GameBoard}
  *     wordSearchBoard
  */
-function randomizeCharacters(wordSearchBoard) {
+function populateWithRandomChars(wordSearchBoard) {
   for (const row of wordSearchBoard.board) {
     for (const square of row) {
       const randomNum = Math.random() * 101.432;
-      square.character = getCharater(randomNum);
+      square.character = getRandomizedCharater(randomNum);
     }
   }
 }
@@ -216,9 +267,7 @@ function randomizeCharacters(wordSearchBoard) {
 
 exports = {
   createGameBoard,
-  randomizeCharacters,
   GameBoard,
   Square,
-  Point,
-  distance
+  Point
 };

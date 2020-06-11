@@ -1,16 +1,22 @@
 goog.module('wordsearch.view');
 
 const model = goog.require('wordsearch.model');
-// const controller = goog.require('wordsearch.main');
 
 const canvas = document.getElementById('wordSearchCanvas');
 const context = canvas.getContext('2d');
 
-
+/**
+ * Returns the height of the view
+ * @returns {number}
+ */
 function getViewHeight() {
   return canvas.getBoundingClientRect().height;
 }
 
+/**
+ * Returns the width of the view
+ * @returns {number}
+ */
 function getViewWidth() {
   return canvas.getBoundingClientRect().width;
 }
@@ -20,18 +26,10 @@ class View {
   constructor(wordSearchBoard) {
     /** @const {!model.GameBoard} */
     this.wordSearchBoard = wordSearchBoard;
-    /** @type {boolean} */
-    this.drawLineFlag = false;
-    /** @type {number} */
-    this.globalX = 0;
-    /** @type {number} */
-    this.globalY = 0;
   }
-
 
   /*
    * Draws the game board onto the screen with the canvas api.
-   * @param {!model.GameBoard} wordSearchBoard
    */
   drawGameBoard() {
     context.textAlign = 'center';
@@ -53,11 +51,20 @@ class View {
     }
   }
 
+  /**
+   * Draws a line to indicate the current selection within the game board
+   * between the two points
+   * @param {number} startX
+   * @param {number} startY
+   * @param {number} endX
+   * @param {number} endY
+   */
   drawSearchLine(startX, startY, endX, endY) {
     const angleRadians = Math.atan2(endY - startY, endX - startX);
 
     const dist =
         Math.sqrt(Math.pow(startX - endX, 2) + Math.pow(startY - endY, 2))
+
     endX = startX + dist;
     endY = startY;
 
@@ -66,9 +73,14 @@ class View {
 
     const midPoint = startX + ((endX - startX) / 2);
 
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    this.drawGameBoard();
+
     context.save();
-    context.globalAlpha = .5;
-    context.fillStyle = 'orange';
+
+    // context.globalAlpha = .5;
+
     context.lineWidth = 5.0;
     context.translate(startX, startY);
     context.rotate(angleRadians);
@@ -81,7 +93,7 @@ class View {
 
     context.arcTo(
         endX + radiusOfLine, endY - radiusOfLine, endX + radiusOfLine, endY,
-        radiusOfLine);  // Curve 1
+        radiusOfLine);
 
     context.arcTo(
         endX + radiusOfLine, endY + radiusOfLine, midPoint,
@@ -93,7 +105,7 @@ class View {
 
     context.arcTo(
         startX - radiusOfLine, startY - radiusOfLine, midPoint,
-        startY - radiusOfLine, radiusOfLine);  // Curve 4
+        startY - radiusOfLine, radiusOfLine);
 
     // Used to complete the rounded edge rectangle
     context.lineTo(midPoint, startY - radiusOfLine);
@@ -102,100 +114,11 @@ class View {
     context.restore();
   }
 
-  foo() {
-    if (this.wordSearchBoard.isOnBoard(500, 40)) {
-      console.log('THIS SHOULD PRINT');
-    } else {
-      console.log('THIS SHOULD NOT PRINT');
-    }
-  }
-  /*
-    onMouseDown() {
-      var x = window.event.clientX;  // Get the horizontal coordinate
-      var y = window.event.clientY;  // Get the vertical coordinate
-
-      if (this.drawLineFlag === false) {
-        console.log('THIS SHOULD PRINT');
-      } else {
-        console.log('THIS SHOULD NOT PRINT');
-      }
-
-      if (this.wordSearchBoard.isOnBoard(x, y)) {
-        this.drawLineFlag = true;
-
-        const square = this.wordSearchBoard.findSquare(x, y);
-        this.globalX =
-            square.xCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2;
-        this.globalY =
-            square.yCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2;
-
-        context.strokeStyle = 'navy';
-        context.lineWidth = 3.0;
-        context.beginPath();
-        context.moveTo(this.globalX, this.globalY)
-
-        // square.colour = 'orange';
-
-        console.log('Mouse down at: X coords: ' + x + ', Y coords: ' + y);
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        this.drawGameBoard();
-
-        console.log('Hit!');
-      } else {
-        console.log('Miss!');
-      }
-    }
-
-
-    onMouseUp() {
-      var x = window.event.clientX;  // Get the horizontal coordinate
-      var y = window.event.clientY;  // Get the vertical coordinate
-
-
-
-      if (this.drawLineFlag) {  // TODO - Determine what to do when mouseDown
-                                // occures
-                                // on
-        // Board but mouseUp occures outside of board;
-        const square = this.wordSearchBoard.findSquare(x, y);
-        const endX =
-            square.xCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2;
-        const endY =
-            square.yCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2;
-        console.log(this.wordSearchBoard.getSquaresFromLine(
-            this.globalX, this.globalY, endX, endY));
-
-        this.drawLineFlag = false;
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        this.drawGameBoard();
-        this.drawSearchLine(this.globalX, this.globalY, endX, endY);
-
-        console.log(
-            'Distance from start to end is: ',
-            model.distance(
-                new model.Point(this.globalX, this.globalY),
-                new model.Point(endX, endY)));
-      }
-    }
-
-    onMouseMove() {
-      var x = window.event.clientX;  // Get the horizontal coordinate
-      var y = window.event.clientY;  // Get the vertical coordinate
-
-      if (this.drawLineFlag) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        this.drawGameBoard();
-        this.drawSearchLine(this.globalX, this.globalY, x, y)
-      }
-    }
-    */
-
+  /**
+   * Initiate the view and draw the game board
+   */
   init() {
     this.drawGameBoard();
-    // this.foo();
   }
 }
 
