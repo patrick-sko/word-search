@@ -3,6 +3,11 @@ goog.module('wordsearch.controller');
 const model = goog.require('wordsearch.model');
 const view = goog.require('wordsearch.view');
 
+/**
+ * The controller bridges the gap between the model and view by handling input
+ * passed from the view and make the appropriate calls to update the model. It
+ * also makes call to updae the view when the model changes.
+ */
 class Controller {
   /** @param {!model.GameBoard} wordSearchBoard */
   /** @param {!view.View} myView */
@@ -13,31 +18,25 @@ class Controller {
     this.myView = myView;
     /** @type {boolean} */
     this.drawLineFlag = false;
-    /** @type {number} */
-    this.startX = 0;
-    /** @type {number} */
-    this.startY = 0;
+    /** @type {!model.Point} */
+    this.startPoint;
   }
 
   /**
    * Function to execute when user pressed down on mouse
    */
-  onMouseDown() {
-    const x = window.event.clientX;
-    const y = window.event.clientY;
+  onMouseDown(event) {
+    const point = new model.Point(event.clientX, event.clientY);
 
-    if (this.wordSearchBoard.isOnBoard(new model.Point(x, y))) {
+
+    if (this.wordSearchBoard.isOnBoard(point)) {
       this.drawLineFlag = true;
 
-      const square = this.wordSearchBoard.findSquare(new model.Point(x, y));
-      this.startX =
-          square.xCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2;
-      this.startY =
-          square.yCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2;
+      const square = this.wordSearchBoard.findSquare(point);
 
-      this.myView.drawSearchLine(
-          new model.Point(this.startX, this.startY),
-          new model.Point(this.startX, this.startY));
+      this.startPoint = new model.Point(
+          square.xCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2,
+          square.yCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2);
 
       console.log('Hit!');
     } else {
@@ -48,45 +47,50 @@ class Controller {
   /**
    * Function to execute when user lifts off mouse
    */
-  onMouseUp() {
-    const x = window.event.clientX;
-    const y = window.event.clientY;
+  onMouseUp(event) {
+    const point = new model.Point(event.clientX, event.clientY)
 
     if (this.drawLineFlag) {  // TODO - Determine what to do when mouseDown
-                              // occures off the board
-      const square = this.wordSearchBoard.findSquare(new model.Point(x, y));
-      const endX =
-          square.xCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2;
-      const endY =
-          square.yCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2;
+      // occures off the board
+      this.drawLineFlag = false
+      const square = this.wordSearchBoard.findSquare(point);
 
-      console.log(this.wordSearchBoard.getSquaresFromLine(
-          new model.Point(this.startX, this.startY),
-          new model.Point(endX, endY)));
+      const endPoint = new model.Point(
+          square.xCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2,
+          square.yCoord + (this.wordSearchBoard.dimensionsOfSquare) / 2);
 
-      this.drawLineFlag = false;
+      if (endPoint.equals(this.startPoint)) {
+        return;
+      }
 
-      this.myView.drawSearchLine(
-          new model.Point(this.startX, this.startY),
-          new model.Point(endX, endY));
+
+      const targetSquares =
+          this.wordSearchBoard.getSquaresFromLine(this.startPoint, endPoint);
+
+      for (const square of targetSquares) {
+        square.colour = 'orange';
+      }
+
+      console.log(targetSquares);
+
+      ;
+
+      this.myView.drawSearchLine(this.startPoint, endPoint);
 
       console.log(
           'Distance from start to end is: ',
-          new model.Point(this.startX, this.startY)
-              .distance(new model.Point(endX, endY)));
+          this.startPoint.distance(endPoint));
     }
   }
 
   /**
    * Function to execute when user moves mouse while being pressed
    */
-  onMouseMove() {
-    const x = window.event.clientX;
-    const y = window.event.clientY;
+  onMouseMove(event) {
+    const point = new model.Point(event.clientX, event.clientY)
 
     if (this.drawLineFlag) {
-      this.myView.drawSearchLine(
-          new model.Point(this.startX, this.startY), new model.Point(x, y));
+      this.myView.drawSearchLine(this.startPoint, point);
     }
   }
 }
@@ -102,14 +106,14 @@ function playGame() {
   const controller = new Controller(wordSearchBoard, myView);
 
 
-  window.addEventListener('mousedown', () => {
-    controller.onMouseDown();
+  window.addEventListener('mousedown', (event) => {
+    controller.onMouseDown(event);
   });
-  window.addEventListener('mousemove', () => {
-    controller.onMouseMove();
+  window.addEventListener('mousemove', (event) => {
+    controller.onMouseMove(event);
   });
-  window.addEventListener('mouseup', () => {
-    controller.onMouseUp();
+  window.addEventListener('mouseup', (event) => {
+    controller.onMouseUp(event);
   });
 
   myView.init();

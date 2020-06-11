@@ -10,6 +10,9 @@ const LETTER_FREQUENCY = [
 /** @const {!Array<String>} */
 const WORDS = ['patrick'];
 
+/**
+ * A 2D point in euclidean space
+ */
 class Point {
   /**
    * @param {number} x
@@ -37,7 +40,7 @@ class Point {
    * @returns {number}
    */
   dot(pointB) {
-    return this.x * pointB.x + this.y + pointB.y;
+    return this.x * pointB.x + this.y * pointB.y;
   }
 
   /**
@@ -49,11 +52,21 @@ class Point {
     return Math.sqrt(
         Math.pow(this.x - PointB.x, 2) + Math.pow(this.y - PointB.y, 2))
   }
+
+  /**
+   * Checks if two points are equal
+   * @param {!Point} PointB
+   * @returns {boolean}
+   */
+  equals(PointB) {
+    return this.x === PointB.x && this.y === PointB.y;
+  }
 }
 
 /**
  * Gets the project of targetPoint on the line specified between startPoint and
- * endPoint
+ * endPoint. Based from following algorithm:
+ * https://en.wikibooks.org/wiki/Linear_Algebra/Orthogonal_Projection_Onto_a_Line
  * @param {!Point} startPoint
  * @param {!Point} endPoint
  * @param {!Point} targetPoint
@@ -67,9 +80,9 @@ function getNearestPointOnLine(startPoint, endPoint, targetPoint) {
   let s = u.dot(v) / v.dot(v);
 
   if (s < 0) {
-    return startPoint;
-  } else if (s > 1) {
     return endPoint;
+  } else if (s > 1) {
+    return startPoint;
   } else {
     let I = startPoint;
     let w = new Point(s * v.x, s * v.y);
@@ -78,6 +91,10 @@ function getNearestPointOnLine(startPoint, endPoint, targetPoint) {
   }
 }
 
+/**
+ * The data that represents the game board. It has no knowledge of the view
+ * or controller.
+ */
 class GameBoard {
   /**
    * @param {number} startPointX
@@ -125,7 +142,7 @@ class GameBoard {
 
 
   /**
-   * Determines if the coords x, y lie within the game board
+   * Determines if the point lies within the game board
    * @param {!Point} point
    * @returns {boolean}
    */

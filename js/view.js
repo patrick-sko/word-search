@@ -21,6 +21,10 @@ function getViewWidth() {
   return canvas.getBoundingClientRect().width;
 }
 
+/**
+ * The view displays the wordSearchBoard with the canvas api. It does not
+ * manipulate the data of the board.
+ */
 class View {
   /** @param {!model.GameBoard} wordSearchBoard */
   constructor(wordSearchBoard) {
