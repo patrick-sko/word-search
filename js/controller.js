@@ -6,7 +6,7 @@ const view = goog.require('wordsearch.view');
 /**
  * The controller bridges the gap between the model and view by handling input
  * passed from the view and make the appropriate calls to update the model. It
- * also makes call to updae the view when the model changes.
+ * also makes call to update the view when the model changes.
  */
 class Controller {
   /**
