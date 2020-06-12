@@ -26,10 +26,22 @@ function getViewWidth() {
  * manipulate the data of the board.
  */
 class View {
-  /** @param {!model.GameBoard} wordSearchBoard */
-  constructor(wordSearchBoard) {
+  /**
+   * @param {!model.GameBoard} wordSearchBoard
+   * @param {!Array<!model.Line>} arrayOfLines
+   */
+  constructor(wordSearchBoard, arrayOfLines) {
     /** @const {!model.GameBoard} */
     this.wordSearchBoard = wordSearchBoard;
+    this.arrayOfLines = arrayOfLines;
+  }
+
+  redraw() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    this.drawGameBoard();
+    if (this.arrayOfLines.length > 0) {
+      this.drawLines();
+    }
   }
 
   /*
@@ -78,12 +90,12 @@ class View {
 
     const midPoint = startPoint.x + ((endPoint.x - startPoint.x) / 2);
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
+
 
     // TODO - Consider the implications of re-drawing the gameboard everytime
     // the line is drawn. Determine performance if size is for example > 1000.
     // If impactful, determine a new way to draw to the screen more efficiently.
-    this.drawGameBoard();
+    // this.drawGameBoard();
 
     context.save();
 
@@ -120,6 +132,24 @@ class View {
 
     context.stroke();
     context.restore();
+  }
+
+  updateLines(lines) {
+    this.arrayOfLines = lines;
+  }
+
+
+  drawLines() {
+    for (const line of this.arrayOfLines) {
+      context.fillStyle = line.colour;
+      context.strokeStyle = line.colour;
+      context.globalAlpha = .5;
+      this.drawSearchLine(line.startPoint, line.endPoint);
+      context.closePath();
+      context.fill();
+      context.globalAlpha = 1;
+      context.strokeStyle = 'black';
+    }
   }
 
   /**

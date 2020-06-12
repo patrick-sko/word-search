@@ -71,11 +71,22 @@ class Controller {
       const targetSquares =
           this.wordSearchBoard.getSquaresFromLine(this.startPoint, endPoint);
 
-      for (const square of targetSquares) {
-        square.colour = 'orange';
+      // for (const square of targetSquares) {
+      // square.colour = 'orange';
+      //}
+
+      const word = getWord(targetSquares);
+
+      console.log('Word found is: ', word);
+
+      if (model.isValidWord(word)) {
+        const tempLine = new model.Line(this.startPoint, endPoint);
+        model.addFoundWords(tempLine);
+        this.myView.updateLines(model.getFoundWords());
+        this.myView.redraw();
+        this.myView.drawSearchLine(this.startPoint, endPoint);
       }
 
-      this.myView.drawSearchLine(this.startPoint, endPoint);
 
       console.log(
           'Distance from start to end is: ',
@@ -91,9 +102,22 @@ class Controller {
     const point = new model.Point(event.clientX, event.clientY)
 
     if (this.drawLineFlag) {
+      this.myView.redraw();
       this.myView.drawSearchLine(this.startPoint, point);
     }
   }
+}
+
+/**
+ *
+ * @param {!Array<!model.Square>} arrayOfSquares
+ */
+function getWord(arrayOfSquares) {
+  let word = '';
+  for (const square of arrayOfSquares) {
+    word = word.concat(square.character);
+  }
+  return word;
 }
 
 
@@ -101,9 +125,11 @@ function playGame() {
   const wordSearchBoard =
       model.createGameBoard(view.getViewHeight(), view.getViewWidth());
 
+  model.addWord('mikita', wordSearchBoard, new model.Point(525.75, 159.95));
+
   console.log(wordSearchBoard);
 
-  const myView = new view.View(wordSearchBoard);
+  const myView = new view.View(wordSearchBoard, model.getFoundWords());
   const controller = new Controller(wordSearchBoard, myView);
 
 

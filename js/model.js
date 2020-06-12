@@ -7,8 +7,19 @@ const LETTER_FREQUENCY = [
   83.559, 92.915, 95.673, 96.651, 99.211, 99.361, 101.355, 101.432
 ];
 
-/** @const {!Array<String>} */
-const WORDS = ['patrick'];
+/** @const {!Set<string>} */
+const WORDS = new Set();
+
+class Line {
+  constructor(startPoint, endPoint) {
+    this.startPoint = startPoint;
+    this.endPoint = endPoint;
+    this.colour = '#0F9D58';
+  }
+}
+
+/** @const {!Array<!Line>} */
+const FOUND_WORDS = [];
 
 /**
  * A 2D point in euclidean space
@@ -188,6 +199,9 @@ class GameBoard {
       horizantalScaler *= -1;
     }
 
+    console.log(verticalScaler);
+    console.log(startPoint);
+
     const startSquare = this.findSquare(startPoint);
     startPoint = new Point(
         startSquare.xCoord + this.dimensionsOfSquare / 2,
@@ -310,6 +324,11 @@ function createGameBoard(canvasHeight, canvasWidth) {
     currY += gameBoard.dimensionsOfSquare;
   }
 
+  WORDS.add('patrick');
+  WORDS.add('mikita');
+  WORDS.add('laura');
+
+
   populateWithRandomChars(gameBoard);
 
   return gameBoard;
@@ -349,10 +368,38 @@ function populateWithRandomChars(wordSearchBoard) {
   }
 }
 
+function addWord(word, wordSearchBoard, startOfWord) {
+  console.log('CODE RUS');
+  let currPoint = startOfWord;
+  let square = wordSearchBoard.findSquare(currPoint);
+  for (let i = 0; i < word.length; ++i) {
+    square.character = word.charAt(i);
+    currPoint = new Point(currPoint.x + 45.7, currPoint.y + 45.7);
+    square = wordSearchBoard.findSquare(currPoint);
+  }
+}
+
+function isValidWord(word) {
+  return WORDS.has(word);
+}
+
+function addFoundWords(line) {
+  FOUND_WORDS.push(line);
+}
+
+function getFoundWords() {
+  return FOUND_WORDS;
+}
+
 
 exports = {
   createGameBoard,
   GameBoard,
   Square,
-  Point
+  Point,
+  addWord,
+  isValidWord,
+  Line,
+  addFoundWords,
+  getFoundWords
 };
