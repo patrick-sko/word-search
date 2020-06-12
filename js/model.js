@@ -28,7 +28,7 @@ class Point {
   /**
    * Returns the difference between two points
    * @param {!Point} pointB
-   * @returns {!Point}
+   * @return {!Point}
    */
   subtract(pointB) {
     return new Point(this.x - pointB.x, this.y - pointB.y);
@@ -37,7 +37,7 @@ class Point {
   /**
    * Returns the dot product of two points
    * @param {!Point} pointB
-   * @returns {number}
+   * @return {number}
    */
   dot(pointB) {
     return this.x * pointB.x + this.y * pointB.y;
@@ -46,7 +46,7 @@ class Point {
   /**
    * Returns the euclidean distance between two points
    * @param {!Point} PointB
-   * @returns {number}
+   * @return {number}
    */
   distance(PointB) {
     return Math.sqrt(
@@ -56,10 +56,15 @@ class Point {
   /**
    * Checks if two points are equal
    * @param {!Point} PointB
-   * @returns {boolean}
+   * @return {boolean}
    */
   equals(PointB) {
     return this.x === PointB.x && this.y === PointB.y;
+  }
+
+  within(pointB, epsilon) {
+    return Math.abs(this.x - pointB.x) <= epsilon &&
+        Math.abs(this.y - pointB.y) <= epsilon;
   }
 }
 
@@ -70,7 +75,7 @@ class Point {
  * @param {!Point} startPoint
  * @param {!Point} endPoint
  * @param {!Point} targetPoint
- * @returns {!Point}
+ * @return {!Point}
  */
 function getNearestPointOnLine(startPoint, endPoint, targetPoint) {
   let v = endPoint.subtract(startPoint);
@@ -97,26 +102,21 @@ function getNearestPointOnLine(startPoint, endPoint, targetPoint) {
  */
 class GameBoard {
   /**
-   * @param {number} startPointX
-   * @param {number} startPointY
-   * @param {number} gameHeight
-   * @param {number} gameWidth
-   * @param {number} dimensionsOfSquare
+   * @param {{startPointX: number, startPointY: number, gameHeight: number,
+   *     gameWidth: number, dimensionsOfSquare: number}} gameDimensions
    * @param {!Array<!Array<!Square>>} board
    */
-  constructor(
-      startPointX, startPointY, gameHeight, gameWidth, dimensionsOfSquare,
-      board) {
+  constructor(gameDimensions, board) {
     /** @type {number} */
-    this.startPointX = startPointX;
+    this.startPointX = gameDimensions.startPointX;
     /** @type {number} */
-    this.startPointY = startPointY;
+    this.startPointY = gameDimensions.startPointY;
     /** @type {number} */
-    this.gameHeight = gameHeight;
+    this.gameHeight = gameDimensions.gameHeight;
     /** @type {number} */
-    this.gameWidth = gameWidth;
+    this.gameWidth = gameDimensions.gameWidth;
     /** @type {number} */
-    this.dimensionsOfSquare = dimensionsOfSquare;
+    this.dimensionsOfSquare = gameDimensions.dimensionsOfSquare;
     /** @type {!Array<!Array<!Square>>} */
     this.board = board;
   }
@@ -124,27 +124,23 @@ class GameBoard {
   /**
    * Returns the square that contains the coords x, y
    * @param {!Point} point
-   * @returns {?Square}
+   * @return {?Square}
    */
   findSquare(point) {
-    for (const row of this.board) {
-      for (const square of row) {
-        const widthOfSquare = square.xCoord + this.dimensionsOfSquare;
-        const heightOfSquare = square.yCoord + this.dimensionsOfSquare;
-        if (point.x <= widthOfSquare && point.y <= heightOfSquare &&
-            point.x > square.xCoord && point.y > square.yCoord) {
-          return square;
-        }
-      }
-    }
-    return null;  // TODO - Handle case where the mouse is off the screen
+    const yIndex =
+        Math.floor((point.y - this.startPointY) / this.dimensionsOfSquare);
+    const xIndex =
+        Math.floor((point.x - this.startPointX) / this.dimensionsOfSquare);
+
+    return this.board[yIndex][xIndex];  // TODO - handle case where
+                                        // point is off the board
   }
 
 
   /**
    * Determines if the point lies within the game board
    * @param {!Point} point
-   * @returns {boolean}
+   * @return {boolean}
    */
   isOnBoard(point) {
     const widthOfBoard =
@@ -152,12 +148,8 @@ class GameBoard {
     const heightOfBoard =
         this.startPointY + this.gameHeight * this.dimensionsOfSquare;
 
-    if (point.x < widthOfBoard && point.y < heightOfBoard &&
-        point.x > this.startPointX && point.y > this.startPointY) {
-      return true;
-    } else {
-      return false;
-    }
+    return point.x < widthOfBoard && point.y < heightOfBoard &&
+        point.x > this.startPointX && point.y > this.startPointY
   }
 
   /**
@@ -165,11 +157,73 @@ class GameBoard {
    * created by the parameters to the center of each square
    * @param {!Point} startPoint
    * @param {!Point} endPoint
-   * @returns {!Array<!Square>}
+   * @return {!Array<!Square>}
    */
   getSquaresFromLine(startPoint, endPoint) {
     const result = [];
 
+    let distanceBetweenChar = this.dimensionsOfSquare;
+
+    let horizantalScaler = null;
+    let verticalScaler = null;
+
+    if (isLineDiagonal(startPoint, endPoint)) {
+      distanceBetweenChar = Math.sqrt(Math.pow(this.dimensionsOfSquare, 2) * 2);
+      horizantalScaler = distanceBetweenChar / Math.sqrt(2);
+      verticalScaler = horizantalScaler;
+    } else if (isLineVertical(startPoint, endPoint)) {
+      horizantalScaler = 0;
+      verticalScaler = distanceBetweenChar;
+    } else {
+      horizantalScaler = distanceBetweenChar;
+      verticalScaler = 0;
+    }
+
+
+    if (startPoint.y > endPoint.y) {
+      verticalScaler *= -1;
+    }
+
+    if (startPoint.x > endPoint.x) {
+      horizantalScaler *= -1;
+    }
+
+    const startSquare = this.findSquare(startPoint);
+    startPoint = new Point(
+        startSquare.xCoord + this.dimensionsOfSquare / 2,
+        startSquare.yCoord + this.dimensionsOfSquare / 2);
+
+    const endSquare = this.findSquare(endPoint);
+    endPoint = new Point(
+        endSquare.xCoord + this.dimensionsOfSquare / 2,
+        endSquare.yCoord + this.dimensionsOfSquare / 2);
+
+
+    const expectedNumberOfLetters =
+        (startPoint.distance(endPoint) / distanceBetweenChar + 1);
+
+    console.log('Expected # of letters: ', expectedNumberOfLetters)
+
+    if (Math.abs(
+            expectedNumberOfLetters - Math.round(expectedNumberOfLetters)) >
+        0.001) {
+      return result;  // Early exit. Expected letters should be near exact if
+                      // diagonol line is consistent with distanceBetweenChar.
+    }
+
+    let expectedPoint = new Point(startPoint.x, startPoint.y);
+
+    for (let i = 0; i < Math.round(expectedNumberOfLetters); ++i) {
+      const square = this.findSquare(expectedPoint);
+      result.push(square);
+
+      expectedPoint = new Point(
+          expectedPoint.x + horizantalScaler, expectedPoint.y + verticalScaler);
+    }
+
+    return result;
+
+    /*
     for (const row of this.board) {
       for (const square of row) {
         let center = new Point(
@@ -182,11 +236,17 @@ class GameBoard {
       }
     }
 
-    return result;
+    return result;*/
   }
 }
 
+function isLineDiagonal(pointA, pointB) {
+  return (pointA.x !== pointB.x && pointA.y !== pointB.y);
+}
 
+function isLineVertical(pointA, pointB) {
+  return (Math.abs(pointA.x - pointB.x) < 0.01 && (pointA.y !== pointB.y));
+}
 /** @record */
 class Square {
   constructor() {
@@ -208,10 +268,18 @@ class Square {
  * own square within the board.
  * @param {number} canvasHeight
  * @param {number} canvasWidth
- * @returns {!GameBoard}
+ * @return {!GameBoard}
  */
 function createGameBoard(canvasHeight, canvasWidth) {
-  const gameBoard = new GameBoard(0, 0, 10, 10, 0, []);
+  const gameDimensions = {
+    startPointX: 0,
+    startPointY: 0,
+    gameHeight: 10,
+    gameWidth: 10,
+    dimensionsOfSquare: 0
+  };
+
+  const gameBoard = new GameBoard(gameDimensions, []);
 
   const heightScaler = canvasHeight / gameBoard.gameHeight;
   const widthScaler = canvasWidth / gameBoard.gameWidth;

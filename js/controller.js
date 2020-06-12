@@ -9,8 +9,10 @@ const view = goog.require('wordsearch.view');
  * also makes call to updae the view when the model changes.
  */
 class Controller {
-  /** @param {!model.GameBoard} wordSearchBoard */
-  /** @param {!view.View} myView */
+  /**
+   * @param {!model.GameBoard} wordSearchBoard
+   * @param {!view.View} myView
+   */
   constructor(wordSearchBoard, myView) {
     /** @const {!model.GameBoard} */
     this.wordSearchBoard = wordSearchBoard;
@@ -24,6 +26,7 @@ class Controller {
 
   /**
    * Function to execute when user pressed down on mouse
+   * @param {!Event} event
    */
   onMouseDown(event) {
     const point = new model.Point(event.clientX, event.clientY);
@@ -46,6 +49,7 @@ class Controller {
 
   /**
    * Function to execute when user lifts off mouse
+   * @param {!Event} event
    */
   onMouseUp(event) {
     const point = new model.Point(event.clientX, event.clientY)
@@ -71,10 +75,6 @@ class Controller {
         square.colour = 'orange';
       }
 
-      console.log(targetSquares);
-
-      ;
-
       this.myView.drawSearchLine(this.startPoint, endPoint);
 
       console.log(
@@ -85,6 +85,7 @@ class Controller {
 
   /**
    * Function to execute when user moves mouse while being pressed
+   * @param {!Event} event
    */
   onMouseMove(event) {
     const point = new model.Point(event.clientX, event.clientY)

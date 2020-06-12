@@ -80,6 +80,9 @@ class View {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
+    // TODO - Consider the implications of re-drawing the gameboard everytime
+    // the line is drawn. Determine performance if size is for example > 1000.
+    // If impactful, determine a new way to draw to the screen more efficiently.
     this.drawGameBoard();
 
     context.save();
