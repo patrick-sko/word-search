@@ -85,6 +85,8 @@ class Controller {
         this.myView.updateLines(model.getFoundWords());
         this.myView.redraw();
         this.myView.drawSearchLine(this.startPoint, endPoint);
+      } else {
+        this.myView.redraw();
       }
 
 
