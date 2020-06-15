@@ -252,6 +252,28 @@ class GameBoard {
 
     return result;*/
   }
+
+  doesWordFit(wordLength, startPoint, endPoint) {}
+
+  generateRandomWordParams(wordLength) {
+    const CHANCE_IS_REVERSED = 0.5;
+
+    const isReversed = Math.random() < CHANCE_IS_REVERSED ? false : true;
+
+    const directionChance = Math.random();
+
+    let direction = null;
+
+    if (directionChance < 0.33) {
+      direction = 'vertical';
+    } else if (directionChance < 0.66) {
+      direction = 'diagonal';
+    } else {
+      direction = 'horizontal';
+    }
+
+    // const startSquare =
+  }
 }
 
 function isLineDiagonal(pointA, pointB) {
@@ -390,6 +412,7 @@ function addFoundWords(line) {
 function getFoundWords() {
   return FOUND_WORDS;
 }
+
 
 
 exports = {
