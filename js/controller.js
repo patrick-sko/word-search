@@ -80,7 +80,7 @@ class Controller {
       console.log('Word found is: ', word);
 
       if (model.isValidWord(word)) {
-        const tempLine = new model.Line(this.startPoint, endPoint);
+        const tempLine = new model.Line(this.startPoint, endPoint, getColour());
         model.addFoundWords(tempLine);
         this.myView.updateLines(model.getFoundWords());
         this.myView.redraw();
@@ -122,12 +122,39 @@ function getWord(arrayOfSquares) {
   return word;
 }
 
+let colourCounter = -1;
+function getColour() {
+  colourCounter++;
+  if (colourCounter % 4 === 0) {
+    return '#4285F4';
+  } else if (colourCounter % 4 === 1) {
+    return '#DB4437';
+  } else if (colourCounter % 4 === 2) {
+    return '#F4B400';
+  } else {
+    return '#0F9D58';
+  }
+}
+
 
 function playGame() {
   const wordSearchBoard =
       model.createGameBoard(view.getViewHeight(), view.getViewWidth());
 
-  model.addWord('mikita', wordSearchBoard, new model.Point(525.75, 159.95));
+  model.addWord('mikita', wordSearchBoard);
+  model.addWord('patrick', wordSearchBoard);
+  model.addWord('laura', wordSearchBoard);
+  model.addWord('google', wordSearchBoard);
+  model.addWord('emma', wordSearchBoard);
+  model.addWord('apple', wordSearchBoard);
+  model.addWord('fruit', wordSearchBoard);
+  model.addWord('oranges', wordSearchBoard);
+  model.addWord('tree', wordSearchBoard);
+  model.addWord('sun', wordSearchBoard);
+
+  model.addWord('water', wordSearchBoard);
+
+
 
   console.log(wordSearchBoard);
 

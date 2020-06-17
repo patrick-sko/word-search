@@ -11,10 +11,10 @@ const LETTER_FREQUENCY = [
 const WORDS = new Set();
 
 class Line {
-  constructor(startPoint, endPoint) {
+  constructor(startPoint, endPoint, colour) {
     this.startPoint = startPoint;
     this.endPoint = endPoint;
-    this.colour = '#0F9D58';
+    this.colour = colour;
   }
 }
 
@@ -148,6 +148,7 @@ class GameBoard {
   }
 
 
+
   /**
    * Determines if the point lies within the game board
    * @param {!Point} point
@@ -199,8 +200,8 @@ class GameBoard {
       horizantalScaler *= -1;
     }
 
-    console.log(verticalScaler);
-    console.log(startPoint);
+    //  console.log(verticalScaler);
+    // console.log(startPoint);
 
     const startSquare = this.findSquare(startPoint);
     startPoint = new Point(
@@ -216,7 +217,7 @@ class GameBoard {
     const expectedNumberOfLetters =
         (startPoint.distance(endPoint) / distanceBetweenChar + 1);
 
-    console.log('Expected # of letters: ', expectedNumberOfLetters)
+    // console.log('Expected # of letters: ', expectedNumberOfLetters)
 
     if (Math.abs(
             expectedNumberOfLetters - Math.round(expectedNumberOfLetters)) >
@@ -253,12 +254,66 @@ class GameBoard {
     return result;*/
   }
 
-  doesWordFit(wordLength, startPoint, endPoint) {}
+  isSquareIndexValid(rowIndex, colIndex) {
+    return rowIndex < this.gameHeight && rowIndex >= 0 && colIndex >= 0 &&
+        colIndex < this.gameWidth;
+  }
 
-  generateRandomWordParams(wordLength) {
-    const CHANCE_IS_REVERSED = 0.5;
 
-    const isReversed = Math.random() < CHANCE_IS_REVERSED ? false : true;
+
+  doesWordFit(wordLength, rowIndex, colIndex, direction) {
+    if (!this.isSquareIndexValid(rowIndex, colIndex)) {
+      console.log('Index is: ', rowIndex, ',', colIndex);
+      throw 'Error - inital square location is not valid';
+    }
+
+    wordLength -= 1;
+
+    if (direction === 'vertical') {
+      return this.isSquareIndexValid(rowIndex, colIndex + wordLength);
+
+    } else if (direction === 'horizontal') {
+      return this.isSquareIndexValid(rowIndex + wordLength, colIndex);
+
+    } else if (direction === 'diagonal') {
+      return this.isSquareIndexValid(
+          rowIndex + wordLength, colIndex + wordLength);
+
+    } else {
+      throw 'ERROR In doesWordFit, no valid option for direction';
+    }
+  }
+
+
+  doesWordMatch(word, rowIndex, colIndex, vertScaler, horiScaler) {
+    // console.log('chcking...');
+    for (let i = 0; i < word.length; ++i) {
+      let square = this.board[rowIndex][colIndex];
+      if (square.isPartOfWord) {
+        if (square.character != word.charAt(i)) {
+          return false;
+        }
+      }
+      rowIndex += horiScaler;
+      colIndex += vertScaler;
+    }
+    return true;
+  }
+
+  /**
+   *
+   * @param {string} word
+   */
+  generateRandomWordParams(word) {
+    const wordLength = word.length;
+
+    const CHANCE_IS_REVERSED = 0.25;
+
+    const isReversed = Math.random() < CHANCE_IS_REVERSED ? true : false;
+
+    if (isReversed) {  // Need this for call do this.doesWordMatch(...)
+      word = word.split('').reverse().join('');
+    }
 
     const directionChance = Math.random();
 
@@ -272,7 +327,40 @@ class GameBoard {
       direction = 'horizontal';
     }
 
-    // const startSquare =
+
+    let vertScaler = 0;
+    let horiScaler = 0;
+    if (direction === 'vertical') {
+      vertScaler = 1;
+    } else if (direction === 'diagonal') {
+      vertScaler = 1;
+      horiScaler = 1;
+    } else if (direction === 'horizontal') {
+      horiScaler = 1;
+    }
+
+
+    let rowIndex = Math.floor(Math.random() * 10);
+    let colIndex = Math.floor(Math.random() * 10);
+
+    console.log('Now placing: ', word);
+
+
+    while (1) {
+      if (this.doesWordFit(wordLength, rowIndex, colIndex, direction)) {
+        if (this.doesWordMatch(
+                word, rowIndex, colIndex, vertScaler, horiScaler)) {
+          break;
+        }
+      }
+      console.log('nooo');
+      rowIndex = Math.floor(Math.random() * 10);
+      colIndex = Math.floor(Math.random() * 10);
+    }
+
+
+
+    return {isReversed, direction, rowIndex, colIndex, vertScaler, horiScaler};
   }
 }
 
@@ -292,6 +380,8 @@ class Square {
     this.yCoord;
     /** @type {string} */
     this.colour;
+    /** @type {boolean} */
+    this.isPartOfWord;
     /** @type {string} */
     this.character;
   }
@@ -334,8 +424,13 @@ function createGameBoard(canvasHeight, canvasWidth) {
   for (let i = 0; i < gameBoard.gameHeight; ++i) {
     const rowOfSquares = [];
     for (let j = 0; j < gameBoard.gameWidth; ++j) {
-      const square =
-          {xCoord: currX, yCoord: currY, colour: 'white', character: '-'};
+      const square = {
+        xCoord: currX,
+        yCoord: currY,
+        colour: 'white',
+        isPartOfWord: false,
+        character: '-'
+      };
 
       rowOfSquares.push(square);
 
@@ -345,10 +440,6 @@ function createGameBoard(canvasHeight, canvasWidth) {
     currX = gameBoard.startPointX;
     currY += gameBoard.dimensionsOfSquare;
   }
-
-  WORDS.add('patrick');
-  WORDS.add('mikita');
-  WORDS.add('laura');
 
 
   populateWithRandomChars(gameBoard);
@@ -390,14 +481,31 @@ function populateWithRandomChars(wordSearchBoard) {
   }
 }
 
-function addWord(word, wordSearchBoard, startOfWord) {
-  console.log('CODE RUS');
-  let currPoint = startOfWord;
-  let square = wordSearchBoard.findSquare(currPoint);
+
+function addWord(word, wordSearchBoard) {
+  //{square, isReversed, direction, rowIndex, colInde};
+
+  WORDS.add(word);
+
+  const wordParams = wordSearchBoard.generateRandomWordParams(word);
+
+  if (wordParams.isReversed) {
+    word = word.split('').reverse().join('');
+    //  console.log('Reversed word: ', word);
+  }
+
+  console.log(
+      'Part of word is at index: ', wordParams.rowIndex, ',',
+      wordParams.colIndex);
+
   for (let i = 0; i < word.length; ++i) {
+    let square =
+        wordSearchBoard.board[wordParams.rowIndex][wordParams.colIndex];
+
+    wordParams.rowIndex += wordParams.horiScaler;
+    wordParams.colIndex += wordParams.vertScaler;
     square.character = word.charAt(i);
-    currPoint = new Point(currPoint.x + 45.7, currPoint.y + 45.7);
-    square = wordSearchBoard.findSquare(currPoint);
+    square.isPartOfWord = true;
   }
 }
 
