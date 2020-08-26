@@ -7,7 +7,7 @@
 
 
 /**
- * @type {!Array<string>}
+ * @type {!Array<String>}
  */
 let ist_arr;
 
