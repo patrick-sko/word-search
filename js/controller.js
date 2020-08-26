@@ -145,14 +145,6 @@ function playGame() {
   model.addWord('patrick', wordSearchBoard);
   model.addWord('laura', wordSearchBoard);
   model.addWord('google', wordSearchBoard);
-  model.addWord('emma', wordSearchBoard);
-  model.addWord('apple', wordSearchBoard);
-  model.addWord('fruit', wordSearchBoard);
-  model.addWord('oranges', wordSearchBoard);
-  model.addWord('tree', wordSearchBoard);
-  model.addWord('sun', wordSearchBoard);
-
-  model.addWord('water', wordSearchBoard);
 
 
 
